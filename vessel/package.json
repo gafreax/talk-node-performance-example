@@ -1,0 +1,16 @@
+{
+  "name": "vessel",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "author": "Gabriele Fontana <gafreax@gmail.com>",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "fastify": "^5.3.2"
+  }
+}

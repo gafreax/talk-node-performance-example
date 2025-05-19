@@ -1,5 +1,11 @@
 import galleon from './app.js'
 
-galleon.listen({ port: 6666 }, () => {
-  galleon.log.info('Server is running on port 6666')
+const PORT = 6666
+
+galleon.listen({ port: PORT }, (err) => {
+  if (err) {
+    galleon.log.error(err)
+  } else {
+    galleon.log.info('Server is running on port ' + PORT)
+  }
 })

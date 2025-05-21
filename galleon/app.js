@@ -4,7 +4,7 @@ import Fastify from 'fastify'
 import Piscina from 'piscina'
 
 import { pirates } from './pirates.js'
-import { pirateSchema, piratesSchema } from './schemas.js'
+import { pirateSchema } from './schemas.js'
 
 const app = Fastify({ logger: true, disableRequestLogging: true })
 
@@ -15,6 +15,7 @@ const worker = new Piscina({
 app.get('/', async (_req, reply) => {
   reply.send({ message: 'A piratesque backend, AHOY' })
 })
+
 app.get('/pool', async (_, reply) => {
   app.log.debug('Long task started')
   const start = performance.now() + performance.timeOrigin
@@ -35,22 +36,26 @@ app.get('/hell', async (_, reply) => {
 })
 
 app.post('/pirate', { schema: { body: pirateSchema } }, async (req, reply) => {
-  const { name, image, description, game } = req.body
-  const pirate = { name, image, description, game }
+  const { name, image, description, game, age, ship } = req.body
 
-  pirates.push(pirate)
+  pirates.push({ name, image, description, game, age, ship })
   reply.send({ done: 'ok' })
 })
 
 app.post('/pirate-without-schema', async (req, reply) => {
-  const { name, image, description, game } = req.body
-  if ( typeof name !== "string" ) {
-    reply.status(400).send({ msg: "Bad Request" })
-  } else if ( typeof image !== "string" ) {
-    reply.status(400).send({ msg: "Bad Request" })
-  } else if ( typeof description !== "string" ) {
-    reply.status(400).send({ msg: "Bad Request" })
-  } else if ( typeof game !== "string" ) {
+  const { name, image, description, game, ship } = req.body
+  const pirate = { name, image, description, game, ship }
+  if (
+    typeof pirate.name !== 'string' ||
+    typeof pirate.age !== 'number' ||
+    typeof pirate.description !== 'string' ||
+    typeof pirate.game !== 'string' ||
+    typeof pirate.image !== 'string' ||
+    typeof pirate.ship !== 'object' ||
+    typeof pirate.ship.name !== 'string' ||
+    typeof pirate.ship.type !== 'string' ||
+    typeof pirate.ship.cannons !== 'number'
+  ) {
     reply.status(400).send({ msg: "Bad Request" })
   } else {
     pirates.push({ name, image, description, game })

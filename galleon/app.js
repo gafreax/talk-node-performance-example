@@ -2,6 +2,7 @@ import { performance } from 'perf_hooks'
 
 import Fastify from 'fastify'
 import Piscina from 'piscina'
+import NodeCache from 'node-cache'
 
 import { pirates } from './pirates.js'
 import { pirateSchema } from './schemas.js'
@@ -12,11 +13,23 @@ const worker = new Piscina({
   filename: './worker.js'
 })
 
-app.get('/', async (_req, reply) => {
+const workerWithParams = new Piscina({
+  filename: './worker-with-params.js',
+})
+
+app.get('/', async (_, reply) => {
   reply.send({ message: 'A piratesque backend, AHOY' })
 })
 
 app.get('/pool', async (_, reply) => {
+  app.log.debug('Long task started')
+  const start = performance.now() + performance.timeOrigin
+  const result = await worker.run()
+  const end = performance.now() + performance.timeOrigin
+  reply.send({ done: 'ok', count: result, time: end - start })
+})
+
+app.get('/pool-cachable', async (_, reply) => {
   app.log.debug('Long task started')
   const start = performance.now() + performance.timeOrigin
   const result = await worker.run()

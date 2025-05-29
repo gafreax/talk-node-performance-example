@@ -7,29 +7,43 @@ import NodeCache from 'node-cache'
 import { pirates } from './pirates.js'
 import { pirateSchema } from './schemas.js'
 
-const app = Fastify({ logger: true, disableRequestLogging: true })
+const app = Fastify({ logger: { level: 'debug'}, disableRequestLogging: true })
+const cache = new NodeCache()
 
-const worker = new Piscina({
+  const worker = new Piscina({
   filename: './worker.js'
 })
 
-const workerWithParams = new Piscina({
-  filename: './worker-with-params.js',
+const workerWithParam = new Piscina({
+  filename: './worker-with-param.js',
 })
 
 app.get('/', async (_, reply) => {
   reply.send({ message: 'A piratesque backend, AHOY' })
 })
 
-app.get('/pool', async (_, reply) => {
+
+app.get('/pool-cachable', async (req, reply) => {
   app.log.debug('Long task started')
-  const start = performance.now() + performance.timeOrigin
-  const result = await worker.run()
-  const end = performance.now() + performance.timeOrigin
-  reply.send({ done: 'ok', count: result, time: end - start })
+  const { start } = req.query
+  app.log.debug(`Received start parameter: ${start}`)
+
+  const cacheKey = `pool-cachable-${start}`
+  const cachedResult = cache.get(cacheKey)
+  const startTime = performance.now() + performance.timeOrigin
+  if (cachedResult) {
+    app.log.debug('Returning cached result')
+    const end = performance.now() + performance.timeOrigin
+    reply.send({ done: 'ok', count: cachedResult, time: end - startTime })
+  } else {
+    const result = await workerWithParam.run(start)
+    cache.set(cacheKey, result)
+    const end = performance.now() + performance.timeOrigin
+    reply.send({ done: 'ok', count: result, time: end - startTime })
+  }
 })
 
-app.get('/pool-cachable', async (_, reply) => {
+app.get('/pool', async (_, reply) => {
   app.log.debug('Long task started')
   const start = performance.now() + performance.timeOrigin
   const result = await worker.run()
@@ -41,7 +55,7 @@ app.get('/hell', async (_, reply) => {
   app.log.debug('Long task started')
   let c = 0
   const start = performance.now() + performance.timeOrigin
-  for (let i = 0; i < 1e12; i++) {
+  for (let i = 0; i < 1e10; i++) {
     c++
   }
   const end = performance.now() + performance.timeOrigin

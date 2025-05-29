@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "npx nodemon index.js | npx pino-pretty"
   },
   "author": "Gabriele Fontana <gafreax@gmail.com>",
   "license": "ISC",
